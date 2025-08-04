@@ -14,6 +14,11 @@
 #include "GameFramework/CharacterMovementComponent.h"
 #include "SComponents/CharacterAttributeComponent.h"
 
+#include "DrawDebugHelpers.h"
+
+#include "Particles/ParticleSystem.h"
+#include "particles/ParticleSystemComponent.h"
+
 DEFINE_LOG_CATEGORY_STATIC(LogFPChar, Warning, All);
 
 //////////////////////////////////////////////////////////////////////////
@@ -66,6 +71,9 @@ AShooterGameCharacter::AShooterGameCharacter()
 
 	AttributeComponent = CreateDefaultSubobject<UCharacterAttributeComponent>(TEXT("CharacterAttribute"));
 
+	const FString DefaultFireEffect = TEXT("/Game/StarterContent/Particles/P_Explosion.P_Explosion");
+
+	GunFireEffect = LoadObject<UParticleSystem>(this, *DefaultFireEffect);
 
 }
 
@@ -116,6 +124,15 @@ void AShooterGameCharacter::SetupPlayerInputComponent(class UInputComponent* Pla
 
 }
 
+FVector AShooterGameCharacter::GetMuzzleLocation() const
+{
+	const FRotator SpawnRotation = GetControlRotation();
+	// MuzzleOffset is in camera space, so transform it to world space before offsetting from the character location to find the final muzzle position
+	const FVector SpawnLocation = ((FP_MuzzleLocation != nullptr) ? FP_MuzzleLocation->GetComponentLocation() : GetActorLocation()) + SpawnRotation.RotateVector(GunOffset);
+
+	return SpawnLocation;
+}
+
 void AShooterGameCharacter::OnFire()
 {
 	// try and fire a projectile
@@ -154,6 +171,8 @@ void AShooterGameCharacter::OnFire()
 			AnimInstance->Montage_Play(FireAnimation, 1.f);
 		}
 	}
+
+	ShowGunFire();
 }
 
 
@@ -208,6 +227,44 @@ void AShooterGameCharacter::StopSprint()
 	if (MovementComp)
 	{
 		MovementComp->MaxWalkSpeed *= 0.5f;
+	}
+
+}
+
+void AShooterGameCharacter::ShowGunFire()
+{
+
+	if (GunFireEffect)
+	{
+		FActorSpawnParameters SpawnParams;
+		SpawnParams.Name = MakeUniqueObjectName(this, AActor::StaticClass());
+		
+		const auto MuzzleLocation = GetMuzzleLocation();
+
+		FTransform InitTrans(FRotator::ZeroRotator, MuzzleLocation);
+
+		DrawDebugSphere(GetWorld(), MuzzleLocation, 5.f, 0, FColor::MakeRandomColor(), false, 10.f, 0, 3.f);
+
+		AActor* ParticleActor = GetWorld()->SpawnActor<AActor>(AActor::StaticClass(), InitTrans, SpawnParams);
+		ParticleActor->SetActorHiddenInGame(false);
+		ParticleActor->SetActorTickEnabled(false);
+
+		UParticleSystemComponent* ParticleComponent = NewObject<UParticleSystemComponent>(ParticleActor);
+
+		ParticleComponent->SetTemplate(GunFireEffect);
+
+		ParticleComponent->SetWorldLocation(MuzzleLocation);
+
+		ParticleComponent->AttachToComponent(ParticleActor->GetRootComponent(),
+			FAttachmentTransformRules::KeepRelativeTransform);
+
+		
+
+		ParticleComponent->RegisterComponent();
+
+
+		ParticleComponent->Activate();
+
 	}
 
 }

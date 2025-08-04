@@ -14,6 +14,7 @@ class UMotionControllerComponent;
 class UAnimMontage;
 class USoundBase;
 
+class UParticleSystem;
 class UCharacterAttributeComponent;
 
 UCLASS(config=Game)
@@ -78,6 +79,9 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Gameplay)
 	uint8 bUsingMotionControllers : 1;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Gameplay)
+	class UParticleSystem* GunFireEffect = nullptr;
+
 protected:
 	
 	/** Fires a projectile. */
@@ -105,6 +109,8 @@ protected:
 
 	void StopSprint();
 
+	void ShowGunFire();
+
 protected:
 	// APawn interface
 	virtual void SetupPlayerInputComponent(UInputComponent* InputComponent) override;
@@ -116,5 +122,8 @@ public:
 	/** Returns FirstPersonCameraComponent subobject **/
 	UCameraComponent* GetFirstPersonCameraComponent() const { return FirstPersonCameraComponent; }
 
+private:
+
+	FVector GetMuzzleLocation() const;
 };
 
