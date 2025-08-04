@@ -1,3 +1,10 @@
+
+Intermediate/
+.vs/
+Binaries/
+DerivedDataCache/
+Saved/
+
 # Prerequisites
 *.d
 
