@@ -243,8 +243,6 @@ void AShooterGameCharacter::ShowGunFire()
 
 		FTransform InitTrans(FRotator::ZeroRotator, MuzzleLocation);
 
-		DrawDebugSphere(GetWorld(), MuzzleLocation, 5.f, 0, FColor::MakeRandomColor(), false, 10.f, 0, 3.f);
-
 		AActor* ParticleActor = GetWorld()->SpawnActor<AActor>(AActor::StaticClass(), InitTrans, SpawnParams);
 		ParticleActor->SetActorHiddenInGame(false);
 		ParticleActor->SetActorTickEnabled(false);
